@@ -76,10 +76,54 @@ class Game:
         if self.last_card.action == "wild_shuffle_hands":
             self.last_card.is_active = False
 
+    def score(self, winner: Player):
+        hands_combined = [card for player in self.players for card in player.hand]
+        score = 0
+        for card in hands_combined:
+            if card.value:
+                score += card.value
+            else:
+                match card.action:
+                    case "skip" | "draw_two" | "reverse":
+                        score += 20
+                    case "wild" | "wild_draw_four":
+                        score += 50
+                    case "wild_swap_hands" | "wild_shuffle_hands":
+                        score += 40
+        winner.score = score
+
+    def end_game(self):
+        winner = self.current_player
+        self.current_player = self.get_next_player()
+        print(self.current_player)
+        if self.last_card.action and self.last_card.is_active:
+            self.card_action(self.last_card)
+            self.last_card.is_active = False
+        self.score(winner)
+        print("Score")
+        for player in self.players:
+            print(f"Player {player.name} - {player.score}")
+        print()
+
+    def start_session(self):
+        self.players = [Player(str(i), [], self.deck) for i in range(player_number)]
+        go_on = True
+        while go_on:
+            self.start_game()
+            self.end_game()
+            while True:
+                inp = input("do you want to play another game? y/n/score")
+                match inp.lower():
+                    case "y": break
+                    case "n":
+                        go_on = False
+                        break
+                    case _: pass
+        print("Session ended!")
+
     def start_game(self):
         """ Start a game (one of many!) during this playing session. """
         self.deck.shuffle()
-        self.players = [Player(str(i), [], self.deck) for i in range(player_number)]
         self.current_player = self.players[0]
         self.last_card = self.current_player.discard()
         self.check_wild_at_start()
@@ -104,7 +148,6 @@ class Game:
                 if not self.current_player.hand:
                     print(f"Player {self.current_player.name} won!")
                     break
-        # self.score()
 
 
 game = Game()

@@ -6,6 +6,7 @@ special_colors = ["black"]
 values = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 actions = ["skip", "draw_two", "reverse"]
 special_actions = ["wild", "wild_draw_four"]
+addon_actions = ["wild_swap_hands", "wild_shuffle_hands"]
 
 
 @dataclasses.dataclass
@@ -16,7 +17,7 @@ class Card:
     is_active: bool = True
 
     def __repr__(self):
-        return f"{self.color} {self.action or self.value} {self.is_active}"
+        return f"{self.color} {self.action or self.value}"
 
 
 # cards = ([Card(color, number) for number in values for color in colors] +

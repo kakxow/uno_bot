@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 import random
-from typing import MutableSequence
 
-from cards import Card, colors
+from cards import Card
 from game_setup import starting_hand_size
 
 
@@ -10,13 +9,20 @@ class Deck:
     def __init__(self, cards: list[Card]) -> None:
         self.cards = list(cards)
 
-    def draw(self, x: int = 1):
+    def draw(self, x: int = 1) -> list[Card]:
         res = self.cards[:x]
         self.cards = self.cards[x:]
         return res
 
     def shuffle(self):
         random.shuffle(self.cards)
+
+    def return_card(self, card: Card):
+        self.cards.append(card)
+        self.shuffle()
+
+    def __len__(self):
+        return len(self.cards)
 
 
 @dataclass()
@@ -49,50 +55,46 @@ class Player:
                     case "wild": wild.append(card)
                     case "wild_draw_four": wild4.append(card)
                     case _: pass
-        return regular_cards or wild or wild4
+        return regular_cards + wild or wild4
 
-    def drop(self) -> Card:
+    def discard(self) -> Card:
+        """ Play random card. """
         card = self.hand.pop(random.randint(0, len(self.hand)-1))
-        if card.color == "black":
-            color = ""
-            while color not in colors:
-                color = input("Select a new color - red, blue, yellow, green")
-            card.color = color
-        print(card)
         return card
 
-    def play(self, play_choices: list[Card]) -> Card:
-        #for i, card in enumerate(self.hand):
-        #    print(i, card)
-        print(*enumerate(play_choices), sep="\n")
+    def play_card(self, card: Card) -> Card:
+        self.hand.remove(card)
+        return card
+
+    def choose_card(self, play_choices: list[Card]) -> Card | None:
         while True:
-            card_id_raw = input("Select card id to play.")
+            card_id_raw = input("Select card id to play or type 'draw' to draw a card.")
             if card_id_raw.isdecimal():
                 card_id = int(card_id_raw)
                 if 0 <= card_id <= len(play_choices):
-                    break
-        played_card = play_choices[card_id]
-        self.hand.remove(played_card)
-        return played_card
+                    played_card = play_choices[card_id]
+                    return played_card
+            elif card_id_raw == "draw":
+                print("draws a card")
+                self.draw()
+                return
 
-    def turn(self, last_card: Card) -> Card:
+    def turn(self, last_card: Card, new_card: bool = False) -> Card:
         """ play a card if can """
-        print(self)
         play_choices = self.check_hand(last_card)
         if play_choices:
-            
-            played_card = self.play(play_choices)
-            if played_card.color == "black":
-                color = ""
-                while color not in colors:
-                    color = input("Select a new color - red, blue, yellow, green")
-                played_card.color = color
-            print(played_card)
-            return played_card
+            print(*enumerate(play_choices), sep="\n")
+            chosen_card = self.choose_card(play_choices)
+            if chosen_card:
+                return self.play_card(chosen_card)
+            else:
+                return last_card
         else:
+            if new_card:
+                return last_card
             print("draws a card")
             self.draw()
-            return last_card
+            return self.turn(last_card, True)
 
     def draw(self, x: int = 1):
         self.hand += self.deck.draw(x)

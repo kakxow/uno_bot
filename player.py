@@ -1,38 +1,21 @@
 from dataclasses import dataclass
 import random
 
-from cards import Card
+from card import Card
+from deck import Deck
 from game_setup import starting_hand_size
-
-
-class Deck:
-    def __init__(self, cards: list[Card]) -> None:
-        self.cards = list(cards)
-
-    def draw(self, x: int = 1) -> list[Card]:
-        res = self.cards[:x]
-        self.cards = self.cards[x:]
-        return res
-
-    def shuffle(self):
-        random.shuffle(self.cards)
-
-    def return_card(self, card: Card):
-        self.cards.append(card)
-        self.shuffle()
-
-    def __len__(self):
-        return len(self.cards)
 
 
 @dataclass()
 class Player:
     name: str
+    id: int
     hand: list[Card]
     score: int = 0
 
-    def __init__(self, name: str, hand: list[Card], deck: Deck, score: int = 0):
+    def __init__(self, name: str, id: int, hand: list[Card], deck: Deck, score: int = 0):
         self.name = name
+        self.id = id
         self.hand = hand
         self.deck = deck
         self.score = score

@@ -1,24 +1,25 @@
-from cards import cards, Card, colors
-from stuff import Deck, Player
+from card import cards, Card, colors
+from deck import Deck
+from player import Player
 
 
 player_number = 2
 
 
-class Game:
+class Uno:
     def __init__(self):
         self.deck = Deck(cards)
         self.discard: list[Card] = []
-        self.number_of_players = player_number
         self.current_player_id = 0
         self.player_increment = 1
+        self.players: list[Player] = []
 
     def get_next_player(self) -> Player:
         self.current_player_id += self.player_increment
-        if self.current_player_id > self.number_of_players - 1:
+        if self.current_player_id > len(self.players) - 1:
             self.current_player_id = 0
         elif self.current_player_id < 0:
-            self.current_player_id = self.number_of_players - 1
+            self.current_player_id = len(self.players) - 1
         return self.players[self.current_player_id]
 
     def reverse_players(self):
@@ -57,7 +58,7 @@ class Game:
         hands_combined = [card for player in self.players for card in player.hand]
         temp_deck = Deck(hands_combined)
         temp_deck.shuffle()
-        new_hand_size = round(len(temp_deck) / len(self.number_of_players))
+        new_hand_size = round(len(temp_deck) / len(len(self.players)))
         for player in self.players:
             player.draw(new_hand_size)
 
@@ -105,6 +106,15 @@ class Game:
             print(f"Player {player.name} - {player.score}")
         print()
 
+    def join_session(self, player_name: str, player_id: int):
+        player_ids = [p.id for p in self.players]
+        if player_id in player_ids:
+            raise KeyError("Player already registered.")
+        self.players.append(Player(player_name, player_id, [], self.deck))
+
+    def leave_session(self, player_id: int):
+        self.players = [p for p in self.players if p.id != player_id]
+
     def start_session(self):
         self.players = [Player(str(i), [], self.deck) for i in range(player_number)]
         go_on = True
@@ -123,6 +133,8 @@ class Game:
 
     def start_game(self):
         """ Start a game (one of many!) during this playing session. """
+        # if len(self.players) < 2:
+        #     raise RuntimeError("Not enough players. Minimum 2 players.")
         self.deck.shuffle()
         self.current_player = self.players[0]
         self.last_card = self.current_player.discard()
@@ -148,7 +160,3 @@ class Game:
                 if not self.current_player.hand:
                     print(f"Player {self.current_player.name} won!")
                     break
-
-
-game = Game()
-game.start_game()
